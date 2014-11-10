@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="css\normalize.css" />
+    <Content Include="images\apple.png" />
     <Content Include="images\background.png" />
     <Content Include="images\bunny.gif" />
     <Content Include="images\bunny1.png" />
@@ -91,9 +92,14 @@
     <Content Include="images\bush2.png" />
     <Content Include="images\bush3.png" />
     <Content Include="images\clouds.png" />
+    <Content Include="images\death.png" />
     <Content Include="images\elf.gif" />
     <Content Include="images\elf1.png" />
     <Content Include="images\heart.png" />
+    <Content Include="images\instructionButton.png" />
+    <Content Include="images\mainscreen.png" />
+    <Content Include="images\pain.png" />
+    <Content Include="images\playButton.png" />
     <Content Include="index.html" />
     <Content Include="scripts\filters\AlphaMapFilter.js" />
     <Content Include="scripts\filters\AlphaMaskFilter.js" />

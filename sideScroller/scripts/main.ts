@@ -5,16 +5,19 @@ var queue;
 var elf: Elf;
 var forest: Forest;
 var bunny: Bunny;
+var apple: Apple;
 var clouds: Clouds;
 var scoreboard: Scoreboard;
 
 // Cloud Array
 var bushes = [];
 var bunnies = [];
+var apples = [];
 
 // Game Constants
 var BUSH_NUM: number = 3;
 var BUNNY_NUM: number = 3;
+var APPLE_NUM: number = 1;
 var GAME_FONT: string = "40px Consolas";//change
 var FONT_COLOUR: string = "#FFFF00";//change
 var PLAYER_LIVES: number = 3;
@@ -28,6 +31,7 @@ function preload(): void {
         { id: "forest", src: "images/background.png" },
         { id: "bush", src: "images/bush1.png" },
         { id: "bunny", src: "images/bunny.gif" },
+        { id: "apple", src: "images/apple.png" },
         { id: "clouds", src: "images/clouds.png" },
         //sounds
         { id: "main", src: "sounds/piano.mp3" },
@@ -41,6 +45,7 @@ function init(): void {
     stage = new createjs.Stage(document.getElementById("canvas"));
     stage.enableMouseOver(20);
     stage.cursor = 'none';
+
     createjs.Ticker.setFPS(60);
     createjs.Ticker.addEventListener("tick", gameLoop);
     gameStart();
@@ -52,6 +57,16 @@ function gameLoop(event): void {
     clouds.update();
     elf.update();
 
+    if (bushes.length > 3) {
+        bushes.pop();
+    }
+    if (bunnies.length > 3) {
+        bunnies.pop();
+    }
+    if (apples.length > 3) {
+        apples.pop();
+    }
+
     for (var count = 0; count < BUSH_NUM; count++) {
         bushes[count].update();
     }
@@ -59,6 +74,11 @@ function gameLoop(event): void {
     for (var count = 0; count < BUNNY_NUM; count++) {
         bunnies[count].update();
     }
+
+    for (var count = 0; count < APPLE_NUM; count++) {
+        apples[count].update();
+    }
+
 
     collisionCheck();
 
@@ -148,6 +168,37 @@ class Bush {
 
     update() {
        // this.image.y += this.dy;
+        this.image.x -= this.dx;
+        if (this.image.x <= (this.width - stage.canvas.width)) {
+            this.reset();
+        }
+    }
+}
+
+class Apple {
+    image: createjs.Bitmap;
+    width: number;
+    height: number;
+    dy: number;
+    dx: number;
+    constructor() {
+        this.image = new createjs.Bitmap(queue.getResult("apple"));
+        this.width = this.image.getBounds().width;
+        this.height = this.image.getBounds().height;
+        this.image.regX = this.width * 0.5;
+        this.image.regY = this.height * 0.5;
+        stage.addChild(this.image);
+        this.reset();
+    }
+
+    reset() {
+        this.image.x = 750;
+        this.image.y = Math.floor(Math.random() * stage.canvas.height);
+        this.dx = 3;
+    }
+
+    update() {
+        // this.image.y += this.dy;
         this.image.x -= this.dx;
         if (this.image.x <= (this.width - stage.canvas.width)) {
             this.reset();
@@ -270,10 +321,29 @@ function elfAndBunny(hitBunny: Bunny) {
     point2.x = bunny.image.x;
     point2.y = bunny.image.y;
     if (distance(point1, point2) < ((elf.width * 0.5) + (bunny.width * 0.5))) {
-        createjs.Sound.play("thud");//change to the dry thud
+        createjs.Sound.play("thud");
         scoreboard.lives -= 1;
         scoreboard.score -= 50;
         bunny.reset();
+    }
+}
+
+// Check Collision between elfAndApple
+function elfAndApple(hitApple: Apple) {
+    var point1: createjs.Point = new createjs.Point();
+    var point2: createjs.Point = new createjs.Point();
+    var apple: Apple = new Apple();
+
+    apple = hitApple;
+
+    point1.x = elf.image.x;
+    point1.y = elf.image.y;
+    point2.x = apple.image.x;
+    point2.y = apple.image.y;
+    if (distance(point1, point2) < ((elf.width * 0.5) + (apple.width * 0.5))) {
+        createjs.Sound.play("leafHit");
+        scoreboard.score += 30;
+        apple.reset();
     }
 }
 
@@ -286,6 +356,10 @@ function collisionCheck() {
 
     for (var count = 0; count < BUNNY_NUM; count++) {
         elfAndBunny(bunnies[count]);
+    }
+
+    for (var count = 0; count < APPLE_NUM; count++) {
+        elfAndApple(apples[count]);
     }
 }
 
@@ -326,6 +400,10 @@ function gameStart(): void {
     }
     for (var count = 0; count < BUNNY_NUM; count++) {
         bunnies[count] = new Bunny();
+    }
+
+    for (var count = 0; count < APPLE_NUM; count++) {
+        apples[count] = new Apple();
     }
 
     elf = new Elf();
