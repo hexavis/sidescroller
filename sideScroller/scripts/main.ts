@@ -57,13 +57,13 @@ function gameLoop(event): void {
     clouds.update();
     elf.update();
 
-    if (bushes.length > 3) {
+    while (bushes.length > 3) {
         bushes.pop();
     }
-    if (bunnies.length > 3) {
+    while (bunnies.length > 3) {
         bunnies.pop();
     }
-    if (apples.length > 3) {
+    while (apples.length > 3) {
         apples.pop();
     }
 
