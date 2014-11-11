@@ -1,0 +1,389 @@
+﻿var stage;
+var queue;
+
+// Game Objects
+var elf;
+var forest;
+var bunny;
+var apple;
+var clouds;
+var scoreboard;
+
+// Cloud Array
+var bushes = [];
+var bunnies = [];
+var apples = [];
+
+// Game Constants
+var BUSH_NUM = 3;
+var BUNNY_NUM = 3;
+var APPLE_NUM = 1;
+var GAME_FONT = "40px Consolas";
+var FONT_COLOUR = "#FFFF00";
+var PLAYER_LIVES = 3;
+
+function preload() {
+    queue = new createjs.LoadQueue();
+    queue.installPlugin(createjs.Sound);
+    queue.addEventListener("complete", init);
+    queue.loadManifest([
+        { id: "elf", src: "images/elf.gif" },
+        { id: "forest", src: "images/background.png" },
+        { id: "bush", src: "images/bush1.png" },
+        { id: "bunny", src: "images/bunny.gif" },
+        { id: "apple", src: "images/apple.png" },
+        { id: "clouds", src: "images/clouds.png" },
+        //sounds
+        { id: "main", src: "sounds/piano.mp3" },
+        { id: "leafHit", src: "sounds/leafHit.wav" },
+        { id: "arrowHit", src: "sounds/leather.wav" },
+        { id: "thud", src: "sounds/thud.wav" }
+    ]);
+}
+
+function init() {
+    stage = new createjs.Stage(document.getElementById("canvas"));
+    stage.enableMouseOver(20);
+    stage.cursor = 'none';
+
+    createjs.Ticker.setFPS(60);
+    createjs.Ticker.addEventListener("tick", gameLoop);
+    gameStart();
+}
+
+// Game Loop
+function gameLoop(event) {
+    forest.update();
+    clouds.update();
+    elf.update();
+
+    while (bushes.length > 3) {
+        bushes.pop();
+    }
+    while (bunnies.length > 3) {
+        bunnies.pop();
+    }
+    while (apples.length > 3) {
+        apples.pop();
+    }
+
+    for (var count = 0; count < BUSH_NUM; count++) {
+        bushes[count].update();
+    }
+
+    for (var count = 0; count < BUNNY_NUM; count++) {
+        bunnies[count].update();
+    }
+
+    for (var count = 0; count < APPLE_NUM; count++) {
+        apples[count].update();
+    }
+
+    collisionCheck();
+
+    scoreboard.update();
+
+    stage.update();
+}
+
+// Elf Class
+var Elf = (function () {
+    function Elf() {
+        this.image = new createjs.Bitmap(queue.getResult("elf"));
+        this.width = this.image.getBounds().width;
+        this.height = this.image.getBounds().height;
+        this.image.regX = this.width * 0.5;
+        this.image.regY = this.height * 0.5;
+        this.image.y = 430;
+
+        stage.addChild(this.image);
+    }
+    Elf.prototype.update = function () {
+        this.image.x = stage.mouseX;
+        this.image.y = stage.mouseY;
+    };
+    return Elf;
+})();
+
+// bunny Class this allows for one bunny at a time.
+var Bunny = (function () {
+    function Bunny() {
+        this.image = new createjs.Bitmap(queue.getResult("bunny"));
+        this.width = this.image.getBounds().width;
+        this.height = this.image.getBounds().height;
+        this.image.regX = this.width * 0.5;
+        this.image.regY = this.height * 0.5;
+        stage.addChild(this.image);
+        this.reset();
+    }
+    Bunny.prototype.reset = function () {
+        this.image.x = 750;
+        this.image.y = Math.floor(Math.random() * stage.canvas.height);
+        this.dy = Math.floor(Math.random() * 4 - 2);
+        this.dx = Math.floor(Math.random() * 5 + 5);
+    };
+
+    Bunny.prototype.update = function () {
+        this.image.y += this.dy;
+        this.image.x -= this.dx;
+        if (this.image.x <= (this.width - stage.canvas.width)) {
+            this.reset();
+        }
+    };
+    return Bunny;
+})();
+
+// Bush Class
+var Bush = (function () {
+    function Bush() {
+        this.image = new createjs.Bitmap(queue.getResult("bush"));
+        this.width = this.image.getBounds().width;
+        this.height = this.image.getBounds().height;
+        this.image.regX = this.width * 0.5;
+        this.image.regY = this.height * 0.5;
+        stage.addChild(this.image);
+        this.reset();
+    }
+    Bush.prototype.reset = function () {
+        this.image.x = 750;
+        this.image.y = Math.floor(Math.random() * stage.canvas.height);
+        this.dx = 3;
+    };
+
+    Bush.prototype.update = function () {
+        // this.image.y += this.dy;
+        this.image.x -= this.dx;
+        if (this.image.x <= (this.width - stage.canvas.width)) {
+            this.reset();
+        }
+    };
+    return Bush;
+})();
+
+var Apple = (function () {
+    function Apple() {
+        this.image = new createjs.Bitmap(queue.getResult("apple"));
+        this.width = this.image.getBounds().width;
+        this.height = this.image.getBounds().height;
+        this.image.regX = this.width * 0.5;
+        this.image.regY = this.height * 0.5;
+        stage.addChild(this.image);
+        this.reset();
+    }
+    Apple.prototype.reset = function () {
+        this.image.x = 750;
+        this.image.y = Math.floor(Math.random() * stage.canvas.height);
+        this.dx = 3;
+    };
+
+    Apple.prototype.update = function () {
+        // this.image.y += this.dy;
+        this.image.x -= this.dx;
+        if (this.image.x <= (this.width - stage.canvas.width)) {
+            this.reset();
+        }
+    };
+    return Apple;
+})();
+
+// Forest Class
+var Forest = (function () {
+    function Forest() {
+        this.image = new createjs.Bitmap(queue.getResult("forest"));
+        this.width = this.image.getBounds().width;
+        this.height = this.image.getBounds().height;
+        this.dx = 3;
+        stage.addChild(this.image);
+        this.reset();
+    }
+    Forest.prototype.reset = function () {
+        this.image.x = 0; //this needs to be changed
+    };
+
+    Forest.prototype.update = function () {
+        this.image.x -= this.dx;
+        if (this.image.x <= -800) {
+            this.reset();
+        }
+    };
+    return Forest;
+})();
+
+// Clouds Class
+var Clouds = (function () {
+    function Clouds() {
+        this.image = new createjs.Bitmap(queue.getResult("clouds"));
+        this.width = this.image.getBounds().width;
+        this.height = this.image.getBounds().height;
+        this.dx = 2;
+        stage.addChild(this.image);
+        this.reset();
+    }
+    Clouds.prototype.reset = function () {
+        this.image.x = 0; //this needs to be changed
+    };
+
+    Clouds.prototype.update = function () {
+        this.image.x -= this.dx;
+        if (this.image.x <= -800) {
+            this.reset();
+        }
+    };
+    return Clouds;
+})();
+
+// The Distance Utility Function
+function distance(p1, p2) {
+    var firstPoint;
+    var secondPoint;
+    var theXs;
+    var theYs;
+    var result;
+
+    firstPoint = new createjs.Point();
+    secondPoint = new createjs.Point();
+
+    firstPoint.x = p1.x;
+    firstPoint.y = p1.y;
+
+    secondPoint.x = p2.x;
+    secondPoint.y = p2.y;
+
+    theXs = secondPoint.x - firstPoint.x;
+    theYs = secondPoint.y - firstPoint.y;
+
+    theXs = theXs * theXs;
+    theYs = theYs * theYs;
+
+    result = Math.sqrt(theXs + theYs);
+
+    return result;
+}
+
+// Check Collision between elfAndBush
+function elfAndBush(hitBush) {
+    var point1 = new createjs.Point();
+    var point2 = new createjs.Point();
+
+    var bush = new Bush();
+
+    bush = hitBush;
+
+    point1.x = elf.image.x;
+    point1.y = elf.image.y;
+    point2.x = bush.image.x;
+    point2.y = bush.image.y;
+    if (distance(point1, point2) < ((elf.width * 0.5) + (bush.width * 0.5))) {
+        createjs.Sound.play("leafHit"); //the bush thud
+        scoreboard.lives -= 1;
+        bush.reset();
+    }
+}
+
+// Check Collision between elfAndBunny
+function elfAndBunny(hitBunny) {
+    var point1 = new createjs.Point();
+    var point2 = new createjs.Point();
+    var bunny = new Bunny();
+
+    bunny = hitBunny;
+
+    point1.x = elf.image.x;
+    point1.y = elf.image.y;
+    point2.x = bunny.image.x;
+    point2.y = bunny.image.y;
+    if (distance(point1, point2) < ((elf.width * 0.5) + (bunny.width * 0.5))) {
+        createjs.Sound.play("thud");
+        scoreboard.lives -= 1;
+        scoreboard.score -= 50;
+        bunny.reset();
+    }
+}
+
+// Check Collision between elfAndApple
+function elfAndApple(hitApple) {
+    var point1 = new createjs.Point();
+    var point2 = new createjs.Point();
+    var apple = new Apple();
+
+    apple = hitApple;
+
+    point1.x = elf.image.x;
+    point1.y = elf.image.y;
+    point2.x = apple.image.x;
+    point2.y = apple.image.y;
+    if (distance(point1, point2) < ((elf.width * 0.5) + (apple.width * 0.5))) {
+        createjs.Sound.play("leafHit");
+        scoreboard.score += 30;
+        apple.reset();
+    }
+}
+
+// Collision Check Utility Function
+function collisionCheck() {
+    for (var count = 0; count < BUSH_NUM; count++) {
+        elfAndBush(bushes[count]);
+    }
+
+    for (var count = 0; count < BUNNY_NUM; count++) {
+        elfAndBunny(bunnies[count]);
+    }
+
+    for (var count = 0; count < APPLE_NUM; count++) {
+        elfAndApple(apples[count]);
+    }
+}
+
+var Scoreboard = (function () {
+    function Scoreboard() {
+        this.labelString = "";
+        this.lives = PLAYER_LIVES;
+        this.score = 0;
+        this.label = new createjs.Text(this.labelString, GAME_FONT, FONT_COLOUR);
+        this.update();
+        this.width = this.label.getBounds().width;
+        this.height = this.label.getBounds().height;
+
+        stage.addChild(this.label);
+    }
+    Scoreboard.prototype.update = function () {
+        this.labelString = "Lives: " + this.lives.toString() + " Score: " + this.score.toString();
+        this.label.text = this.labelString;
+    };
+    return Scoreboard;
+})();
+
+// Main Game Function
+function gameStart() {
+    var point1 = new createjs.Point();
+    var point2 = new createjs.Point();
+
+    forest = new Forest();
+
+    for (var count = 0; count < BUSH_NUM; count++) {
+        bushes[count] = new Bush();
+    }
+    for (var count = 0; count < BUNNY_NUM; count++) {
+        bunnies[count] = new Bunny();
+    }
+
+    for (var count = 0; count < APPLE_NUM; count++) {
+        apples[count] = new Apple();
+    }
+
+    elf = new Elf();
+    clouds = new Clouds();
+
+    scoreboard = new Scoreboard();
+    scoreboard.lives = PLAYER_LIVES;
+    scoreboard.score = 0;
+
+    var mainTune = createjs.Sound.play("main", { loop: 1000 });
+    mainTune.addEventListener("loop", handleLoop);
+    mainTune.volume = mainTune.volume * 0.2;
+
+    function handleLoop(event) {
+        //loop the music
+    }
+}
+//# sourceMappingURL=main.js.map
