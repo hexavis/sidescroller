@@ -13,6 +13,7 @@ var scoreboard;
 var bushes = [];
 var bunnies = [];
 var apples = [];
+var hearts = [];
 
 // Game Constants
 var BUSH_NUM = 3;
@@ -50,6 +51,7 @@ function preload() {
         { id: "playButton", src: "images/playButton.png" },
         { id: "instructions", src: "images/instructions.png" },
         { id: "instructionButton", src: "images/instructionButton.png" },
+        { id: "heart", src: "images/heart.png" },
         //sounds
         { id: "main", src: "sounds/piano.mp3" },
         { id: "leafHit", src: "sounds/leafHit.wav" },
@@ -355,6 +357,7 @@ var Scoreboard = (function () {
         this.labelString = "";
         this.lives = PLAYER_LIVES;
         this.score = 0;
+        this.hx = 5;
         this.label = new createjs.Text(this.labelString, GAME_FONT, FONT_COLOUR);
         this.update();
         this.width = this.label.getBounds().width;
@@ -363,14 +366,48 @@ var Scoreboard = (function () {
         stage.addChild(this.label);
     }
     Scoreboard.prototype.update = function () {
-        this.labelString = "Lives: " + this.lives.toString() + " Score: " + this.score.toString();
-        this.label.text = this.labelString;
+        if (this.lives == 0) {
+            stage.removeAllChildren();
+            gameOver();
+        } else {
+            this.labelString = "Lives: " + this.lives.toString() + " Score: " + this.score.toString();
+            this.label.text = this.labelString;
+        }
     };
     return Scoreboard;
 })();
 
+function gameOver() {
+    stage.cursor = 'default';
+
+    //add the main screen
+    mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
+    this.stage.addChild(mainScreen);
+    mainScreen.x = 0;
+    mainScreen.y = 0;
+
+    //add the play button
+    playButt = new createjs.Bitmap(queue.getResult("playButton"));
+    this.stage.addChild(playButt);
+    playButt.x = 80;
+    playButt.y = 390;
+    playButt.addEventListener("click", mainGameStart);
+
+    var label;
+    var labelString = "";
+
+    label = new createjs.Text(this.labelString, GAME_FONT, FONT_COLOUR);
+    labelString = "Your Score Was: " + scoreboard.score.toString();
+    label.text = labelString;
+    stage.addChild(label);
+
+    stage.update();
+}
+
 // Main Game Function
 function gameStart() {
+    stage.cursor = 'default';
+
     //add the main screen
     mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
     this.stage.addChild(mainScreen);
