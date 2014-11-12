@@ -7,7 +7,7 @@ var forest: Forest;
 var bunny: Bunny;
 var apple: Apple;
 var clouds: Clouds;
-var scoreboard: Scoreboard;
+var scoreboard: Scoreboard; 
 
 // Cloud Array
 var bushes = [];
@@ -22,8 +22,21 @@ var GAME_FONT: string = "40px Consolas";//change
 var FONT_COLOUR: string = "#FFFF00";//change
 var PLAYER_LIVES: number = 3;
 
+var mainScreen;
+var playButt;
+var instructionButt;
+var insScreen;
+
+var progressText = new createjs.Text("", "20px Arial", "#000000");
+
 function preload(): void {
+    stage = new createjs.Stage(document.getElementById("canvas"));
+    progressText.x = 300 - progressText.getMeasuredWidth() / 2;
+    progressText.y = 20;
+    stage.addChild(progressText);
+    stage.update();
     queue = new createjs.LoadQueue();
+    queue.on("progress", handleFileProgress);
     queue.installPlugin(createjs.Sound);
     queue.addEventListener("complete", init);
     queue.loadManifest([
@@ -33,6 +46,10 @@ function preload(): void {
         { id: "bunny", src: "images/bunny.gif" },
         { id: "apple", src: "images/apple.png" },
         { id: "clouds", src: "images/clouds.png" },
+        { id: "mainScreen", src: "images/mainscreen.png" },
+        { id: "playButton", src: "images/playButton.png" },
+        { id: "instructions", src: "images/instructions.png" },
+        { id: "instructionButton", src: "images/instructionButton.png" },
         //sounds
         { id: "main", src: "sounds/piano.mp3" },
         { id: "leafHit", src: "sounds/leafHit.wav" },
@@ -42,13 +59,12 @@ function preload(): void {
 }
 
 function init(): void {
-    stage = new createjs.Stage(document.getElementById("canvas"));
-    stage.enableMouseOver(20);
-    stage.cursor = 'none';
-
-    createjs.Ticker.setFPS(60);
-    createjs.Ticker.addEventListener("tick", gameLoop);
     gameStart();
+}
+
+function handleFileProgress(event) {
+    progressText.text = (queue.progress * 100 | 0) + " % Loaded";
+    stage.update();
 }
 
 // Game Loop
@@ -390,11 +406,71 @@ class Scoreboard {
 // Main Game Function
 function gameStart(): void {
 
+    //add the main screen
+    mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
+    this.stage.addChild(mainScreen);
+    mainScreen.x = 0;
+    mainScreen.y = 0;
+
+    //add the play button
+    playButt = new createjs.Bitmap(queue.getResult("playButton"));
+    this.stage.addChild(playButt);
+    playButt.x = 80;
+    playButt.y = 390;
+    playButt.addEventListener("click", mainGameStart);
+
+    //add the instructions button
+    instructionButt = new createjs.Bitmap(queue.getResult("instructionButton"));
+    this.stage.addChild(instructionButt);
+    instructionButt.x = 80;
+    instructionButt.y = 310;
+    instructionButt.addEventListener("click", showInstructions);
+
+
+    var mainTune = createjs.Sound.play("main", { loop: 1000 });
+    mainTune.addEventListener("loop", handleLoop);
+    mainTune.volume = mainTune.volume * 0.2;
+
+    function handleLoop(event) {
+      //loop the music
+    }
+    stage.update();
+}
+
+function showInstructions(e): void {
+    stage.removeAllChildren();
+
+    //add the main screen
+    insScreen = new createjs.Bitmap(queue.getResult("instructions"));
+    this.stage.addChild(insScreen);
+    insScreen.x = 0;
+    insScreen.y = 0;
+
+    //add the play button
+    playButt = new createjs.Bitmap(queue.getResult("playButton"));
+    this.stage.addChild(playButt);
+    playButt.x = 80;
+    playButt.y = 390;
+    playButt.addEventListener("click", mainGameStart);
+
+    stage.update();
+}
+
+
+function mainGameStart(e): void {
+    createjs.Ticker.setFPS(60);
+    createjs.Ticker.addEventListener("tick", gameLoop);
+
+    stage.enableMouseOver(20);
+    stage.cursor = 'none';
+
+    stage.removeAllChildren();
+
     var point1: createjs.Point = new createjs.Point();
     var point2: createjs.Point = new createjs.Point();
 
     forest = new Forest();
-    
+
     for (var count = 0; count < BUSH_NUM; count++) {
         bushes[count] = new Bush();
     }
@@ -412,12 +488,4 @@ function gameStart(): void {
     scoreboard = new Scoreboard();
     scoreboard.lives = PLAYER_LIVES;
     scoreboard.score = 0;
-
-    var mainTune = createjs.Sound.play("main", { loop: 1000 });
-    mainTune.addEventListener("loop", handleLoop);
-    mainTune.volume = mainTune.volume * 0.2;
-
-    function handleLoop(event) {
-      //loop the music
-    }
 }

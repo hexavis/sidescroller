@@ -22,8 +22,21 @@ var GAME_FONT = "40px Consolas";
 var FONT_COLOUR = "#FFFF00";
 var PLAYER_LIVES = 3;
 
+var mainScreen;
+var playButt;
+var instructionButt;
+var insScreen;
+
+var progressText = new createjs.Text("", "20px Arial", "#000000");
+
 function preload() {
+    stage = new createjs.Stage(document.getElementById("canvas"));
+    progressText.x = 300 - progressText.getMeasuredWidth() / 2;
+    progressText.y = 20;
+    stage.addChild(progressText);
+    stage.update();
     queue = new createjs.LoadQueue();
+    queue.on("progress", handleFileProgress);
     queue.installPlugin(createjs.Sound);
     queue.addEventListener("complete", init);
     queue.loadManifest([
@@ -33,6 +46,10 @@ function preload() {
         { id: "bunny", src: "images/bunny.gif" },
         { id: "apple", src: "images/apple.png" },
         { id: "clouds", src: "images/clouds.png" },
+        { id: "mainScreen", src: "images/mainscreen.png" },
+        { id: "playButton", src: "images/playButton.png" },
+        { id: "instructions", src: "images/instructions.png" },
+        { id: "instructionButton", src: "images/instructionButton.png" },
         //sounds
         { id: "main", src: "sounds/piano.mp3" },
         { id: "leafHit", src: "sounds/leafHit.wav" },
@@ -42,13 +59,12 @@ function preload() {
 }
 
 function init() {
-    stage = new createjs.Stage(document.getElementById("canvas"));
-    stage.enableMouseOver(20);
-    stage.cursor = 'none';
-
-    createjs.Ticker.setFPS(60);
-    createjs.Ticker.addEventListener("tick", gameLoop);
     gameStart();
+}
+
+function handleFileProgress(event) {
+    progressText.text = (queue.progress * 100 | 0) + " % Loaded";
+    stage.update();
 }
 
 // Game Loop
@@ -355,6 +371,64 @@ var Scoreboard = (function () {
 
 // Main Game Function
 function gameStart() {
+    //add the main screen
+    mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
+    this.stage.addChild(mainScreen);
+    mainScreen.x = 0;
+    mainScreen.y = 0;
+
+    //add the play button
+    playButt = new createjs.Bitmap(queue.getResult("playButton"));
+    this.stage.addChild(playButt);
+    playButt.x = 80;
+    playButt.y = 390;
+    playButt.addEventListener("click", mainGameStart);
+
+    //add the instructions button
+    instructionButt = new createjs.Bitmap(queue.getResult("instructionButton"));
+    this.stage.addChild(instructionButt);
+    instructionButt.x = 80;
+    instructionButt.y = 310;
+    instructionButt.addEventListener("click", showInstructions);
+
+    var mainTune = createjs.Sound.play("main", { loop: 1000 });
+    mainTune.addEventListener("loop", handleLoop);
+    mainTune.volume = mainTune.volume * 0.2;
+
+    function handleLoop(event) {
+        //loop the music
+    }
+    stage.update();
+}
+
+function showInstructions(e) {
+    stage.removeAllChildren();
+
+    //add the main screen
+    insScreen = new createjs.Bitmap(queue.getResult("instructions"));
+    this.stage.addChild(insScreen);
+    insScreen.x = 0;
+    insScreen.y = 0;
+
+    //add the play button
+    playButt = new createjs.Bitmap(queue.getResult("playButton"));
+    this.stage.addChild(playButt);
+    playButt.x = 80;
+    playButt.y = 390;
+    playButt.addEventListener("click", mainGameStart);
+
+    stage.update();
+}
+
+function mainGameStart(e) {
+    createjs.Ticker.setFPS(60);
+    createjs.Ticker.addEventListener("tick", gameLoop);
+
+    stage.enableMouseOver(20);
+    stage.cursor = 'none';
+
+    stage.removeAllChildren();
+
     var point1 = new createjs.Point();
     var point2 = new createjs.Point();
 
@@ -377,13 +451,5 @@ function gameStart() {
     scoreboard = new Scoreboard();
     scoreboard.lives = PLAYER_LIVES;
     scoreboard.score = 0;
-
-    var mainTune = createjs.Sound.play("main", { loop: 1000 });
-    mainTune.addEventListener("loop", handleLoop);
-    mainTune.volume = mainTune.volume * 0.2;
-
-    function handleLoop(event) {
-        //loop the music
-    }
 }
 //# sourceMappingURL=main.js.map

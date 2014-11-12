@@ -97,6 +97,7 @@
     <Content Include="images\elf1.png" />
     <Content Include="images\heart.png" />
     <Content Include="images\instructionButton.png" />
+    <Content Include="images\instructions.png" />
     <Content Include="images\mainscreen.png" />
     <Content Include="images\pain.png" />
     <Content Include="images\playButton.png" />
