@@ -29,6 +29,11 @@ var playButt;
 var instructionButt;
 var insScreen;
 
+var elfData;
+var bunnyData;
+
+var atlas: createjs.SpriteSheet;
+
 var progressText = new createjs.Text("", "20px Arial", "#000000");
 
 function preload(): void {
@@ -41,11 +46,15 @@ function preload(): void {
     queue.on("progress", handleFileProgress);
     queue.installPlugin(createjs.Sound);
     queue.addEventListener("complete", init);
+
+   
+
     queue.loadManifest([
-        { id: "elf", src: "images/elf.gif" },
+        //{ id: "elf", src: "images/elf.gif" },
+        { id: "spriteSheet", src: "images/sprite.png" },
         { id: "forest", src: "images/background.png" },
         { id: "bush", src: "images/bush1.png" },
-        { id: "bunny", src: "images/bunny.gif" },
+        //{ id: "bunny", src: "images/bunny.gif" },
         { id: "apple", src: "images/apple.png" },
         { id: "clouds", src: "images/clouds.png" },
         { id: "mainScreen", src: "images/mainscreen.png" },
@@ -63,6 +72,39 @@ function preload(): void {
         { id: "arrowHit", src: "sounds/leather.wav" },
         { id: "thud", src: "sounds/thud.wav" }
     ]);
+    queue.addEventListener("complete", handleComplete);
+    this.atlas = new createjs.SpriteSheet(this.spriteSheetData);
+}
+
+function handleComplete() {
+    var elf = ({
+        "images": ["images/sprite.png"],
+        "frames": [
+            [2, 2, 82, 103],
+            [86, 2, 82, 103],
+            [170, 2, 82, 103]
+        ],
+        "animations": {
+            "run": [3, 2, 1, 3],
+            frequency: 300
+        },
+    });
+
+    var bunny = ({
+        "images": ["images/sprite.png"],
+        "frames": [
+            [254, 2, 83, 74],
+            [339, 2, 83, 74],
+            [424, 2, 83, 74],
+        ],
+        "animations": {
+            "run": [0, 2, 1],         
+        },
+    });
+
+    elfData = new createjs.SpriteSheet(elf);
+    bunnyData = new createjs.SpriteSheet(bunny);
+
 }
 
 function init(): void {
@@ -244,11 +286,12 @@ function gameLoop(event): void {
 
 // Elf Class
 class Elf {
-    image: createjs.Bitmap;
+    image: createjs.BitmapAnimation;
     width: number;
     height: number;
     constructor() {
-        this.image = new createjs.Bitmap(queue.getResult("elf"));
+        this.image = new createjs.BitmapAnimation(elfData, "elf");
+        this.image.gotoAndPlay("run");
         this.width = this.image.getBounds().width;
         this.height = this.image.getBounds().height;
         this.image.regX = this.width * 0.5;
@@ -267,13 +310,15 @@ class Elf {
 
 // bunny Class this allows for one bunny at a time. 
 class Bunny {
-    image: createjs.Bitmap;
+    image: createjs.Sprite;
     width: number;
     height: number;
     dy: number;
     dx: number;
     constructor() {
-        this.image = new createjs.Bitmap(queue.getResult("bunny"));
+        this.image = new createjs.Sprite(bunnyData);
+        this.image.gotoAndPlay("run");
+        this.image.framerate = 1;
         this.width = this.image.getBounds().width;
         this.height = this.image.getBounds().height;
         this.image.regX = this.width * 0.5;

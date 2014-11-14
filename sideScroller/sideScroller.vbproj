@@ -104,6 +104,7 @@
     <Content Include="images\pain.png" />
     <Content Include="images\playAgain.png" />
     <Content Include="images\playButton.png" />
+    <Content Include="images\sprite.png" />
     <Content Include="index.html" />
     <Content Include="scripts\filters\AlphaMapFilter.js" />
     <Content Include="scripts\filters\AlphaMaskFilter.js" />
