@@ -24,6 +24,7 @@ var FONT_COLOUR = "#FFFF00";
 var PLAYER_LIVES = 3;
 
 var mainScreen;
+var yay;
 var playButt;
 var instructionButt;
 var insScreen;
@@ -49,11 +50,15 @@ function preload() {
         { id: "clouds", src: "images/clouds.png" },
         { id: "mainScreen", src: "images/mainscreen.png" },
         { id: "playButton", src: "images/playButton.png" },
+        { id: "playAgainButton", src: "images/playAgain.png" },
         { id: "instructions", src: "images/instructions.png" },
         { id: "instructionButton", src: "images/instructionButton.png" },
+        { id: "yay", src: "images/gameover.png" },
+        { id: "gameover", src: "images/gameoverscreen.png" },
         { id: "heart", src: "images/heart.png" },
         //sounds
         { id: "main", src: "sounds/piano.mp3" },
+        { id: "appleCrunch", src: "sounds/apple.wav" },
         { id: "leafHit", src: "sounds/leafHit.wav" },
         { id: "arrowHit", src: "sounds/leather.wav" },
         { id: "thud", src: "sounds/thud.wav" }
@@ -62,6 +67,129 @@ function preload() {
 
 function init() {
     gameStart();
+}
+
+// Main Game Screen : has a play button and the instruction button
+function gameStart() {
+    stage.cursor = 'default';
+
+    //add the main screen
+    mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
+    this.stage.addChild(mainScreen);
+    mainScreen.x = 0;
+    mainScreen.y = 0;
+
+    //add the play button
+    playButt = new createjs.Bitmap(queue.getResult("playButton"));
+    this.stage.addChild(playButt);
+    playButt.x = 80;
+    playButt.y = 390;
+    playButt.addEventListener("click", mainGameStart);
+
+    //add the instructions button
+    instructionButt = new createjs.Bitmap(queue.getResult("instructionButton"));
+    this.stage.addChild(instructionButt);
+    instructionButt.x = 80;
+    instructionButt.y = 310;
+    instructionButt.addEventListener("click", showInstructions);
+
+    var mainTune = createjs.Sound.play("main", { loop: 1000 });
+    mainTune.addEventListener("loop", handleLoop);
+    mainTune.volume = mainTune.volume * 0.2;
+
+    function handleLoop(event) {
+        //loop the music
+    }
+    stage.update();
+}
+
+//shows the instructions so people know how to play the game
+function showInstructions(e) {
+    stage.removeAllChildren();
+
+    //add the main screen
+    insScreen = new createjs.Bitmap(queue.getResult("instructions"));
+    this.stage.addChild(insScreen);
+    insScreen.x = 0;
+    insScreen.y = 0;
+
+    //add the play button
+    playButt = new createjs.Bitmap(queue.getResult("playButton"));
+    this.stage.addChild(playButt);
+    playButt.x = 80;
+    playButt.y = 390;
+    playButt.addEventListener("click", mainGameStart);
+
+    stage.update();
+}
+
+//the game's score board wooooo~
+var Scoreboard = (function () {
+    function Scoreboard() {
+        this.labelString = "";
+        this.lives = PLAYER_LIVES;
+        this.score = 0;
+        this.hx = 5;
+        this.label = new createjs.Text(this.labelString, GAME_FONT, FONT_COLOUR);
+        this.update();
+        this.width = this.label.getBounds().width;
+        this.height = this.label.getBounds().height;
+
+        stage.addChild(this.label);
+    }
+    Scoreboard.prototype.update = function () {
+        if (this.score < 0) {
+            this.score = 0;
+            this.update();
+        }
+        if (this.lives == 0) {
+            stage.removeAllChildren();
+            gameOver();
+        } else {
+            this.labelString = "Lives: " + this.lives.toString() + " Score: " + this.score.toString();
+            this.label.text = this.labelString;
+        }
+    };
+    return Scoreboard;
+})();
+
+//the game over screen
+function gameOver() {
+    stage.cursor = 'default';
+
+    createjs.Ticker.removeEventListener("tick", gameLoop);
+    stage.removeAllChildren();
+
+    //add the main screen
+    mainScreen = new createjs.Bitmap(queue.getResult("gameover"));
+    this.stage.addChild(mainScreen);
+    mainScreen.x = 0;
+    mainScreen.y = 0;
+
+    //add the little elf
+    yay = new createjs.Bitmap(queue.getResult("yay"));
+    this.stage.addChild(yay);
+    yay.x = 90;
+    yay.y = 150;
+
+    //add the play button
+    playButt = new createjs.Bitmap(queue.getResult("playAgainButton"));
+    this.stage.addChild(playButt);
+    playButt.x = 280;
+    playButt.y = 390;
+    playButt.addEventListener("click", mainGameStart);
+
+    var label;
+    var labelString = "";
+
+    label = new createjs.Text(this.labelString, GAME_FONT, FONT_COLOUR);
+    labelString = "Score: " + scoreboard.score.toString();
+    label.text = labelString;
+    stage.addChild(label);
+    label.x = 300;
+    label.y = 200;
+
+    stage.update();
 }
 
 function handleFileProgress(event) {
@@ -283,18 +411,16 @@ function elfAndBush(hitBush) {
     var point1 = new createjs.Point();
     var point2 = new createjs.Point();
 
-    var bush = new Bush();
-
-    bush = hitBush;
-
+    //var bush: Bush = new Bush();
+    //bush = hitBush;
     point1.x = elf.image.x;
     point1.y = elf.image.y;
-    point2.x = bush.image.x;
-    point2.y = bush.image.y;
-    if (distance(point1, point2) < ((elf.width * 0.5) + (bush.width * 0.5))) {
+    point2.x = hitBush.image.x;
+    point2.y = hitBush.image.y;
+    if (distance(point1, point2) < ((elf.width * 0.5) + (hitBush.width * 0.5))) {
         createjs.Sound.play("leafHit"); //the bush thud
         scoreboard.lives -= 1;
-        bush.reset();
+        hitBush.reset();
     }
 }
 
@@ -302,19 +428,16 @@ function elfAndBush(hitBush) {
 function elfAndBunny(hitBunny) {
     var point1 = new createjs.Point();
     var point2 = new createjs.Point();
-    var bunny = new Bunny();
-
-    bunny = hitBunny;
 
     point1.x = elf.image.x;
     point1.y = elf.image.y;
-    point2.x = bunny.image.x;
-    point2.y = bunny.image.y;
-    if (distance(point1, point2) < ((elf.width * 0.5) + (bunny.width * 0.5))) {
+    point2.x = hitBunny.image.x;
+    point2.y = hitBunny.image.y;
+    if (distance(point1, point2) < ((elf.width * 0.5) + (hitBunny.width * 0.5))) {
         createjs.Sound.play("thud");
         scoreboard.lives -= 1;
         scoreboard.score -= 50;
-        bunny.reset();
+        hitBunny.reset();
     }
 }
 
@@ -322,18 +445,15 @@ function elfAndBunny(hitBunny) {
 function elfAndApple(hitApple) {
     var point1 = new createjs.Point();
     var point2 = new createjs.Point();
-    var apple = new Apple();
-
-    apple = hitApple;
 
     point1.x = elf.image.x;
     point1.y = elf.image.y;
-    point2.x = apple.image.x;
-    point2.y = apple.image.y;
-    if (distance(point1, point2) < ((elf.width * 0.5) + (apple.width * 0.5))) {
-        createjs.Sound.play("leafHit");
+    point2.x = hitApple.image.x;
+    point2.y = hitApple.image.y;
+    if (distance(point1, point2) < ((elf.width * 0.5) + (hitApple.width * 0.5))) {
+        createjs.Sound.play("appleCrunch");
         scoreboard.score += 30;
-        apple.reset();
+        hitApple.reset();
     }
 }
 
@@ -350,111 +470,6 @@ function collisionCheck() {
     for (var count = 0; count < APPLE_NUM; count++) {
         elfAndApple(apples[count]);
     }
-}
-
-var Scoreboard = (function () {
-    function Scoreboard() {
-        this.labelString = "";
-        this.lives = PLAYER_LIVES;
-        this.score = 0;
-        this.hx = 5;
-        this.label = new createjs.Text(this.labelString, GAME_FONT, FONT_COLOUR);
-        this.update();
-        this.width = this.label.getBounds().width;
-        this.height = this.label.getBounds().height;
-
-        stage.addChild(this.label);
-    }
-    Scoreboard.prototype.update = function () {
-        if (this.lives == 0) {
-            stage.removeAllChildren();
-            gameOver();
-        } else {
-            this.labelString = "Lives: " + this.lives.toString() + " Score: " + this.score.toString();
-            this.label.text = this.labelString;
-        }
-    };
-    return Scoreboard;
-})();
-
-function gameOver() {
-    stage.cursor = 'default';
-
-    //add the main screen
-    mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
-    this.stage.addChild(mainScreen);
-    mainScreen.x = 0;
-    mainScreen.y = 0;
-
-    //add the play button
-    playButt = new createjs.Bitmap(queue.getResult("playButton"));
-    this.stage.addChild(playButt);
-    playButt.x = 80;
-    playButt.y = 390;
-    playButt.addEventListener("click", mainGameStart);
-
-    var label;
-    var labelString = "";
-
-    label = new createjs.Text(this.labelString, GAME_FONT, FONT_COLOUR);
-    labelString = "Your Score Was: " + scoreboard.score.toString();
-    label.text = labelString;
-    stage.addChild(label);
-
-    stage.update();
-}
-
-// Main Game Function
-function gameStart() {
-    stage.cursor = 'default';
-
-    //add the main screen
-    mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
-    this.stage.addChild(mainScreen);
-    mainScreen.x = 0;
-    mainScreen.y = 0;
-
-    //add the play button
-    playButt = new createjs.Bitmap(queue.getResult("playButton"));
-    this.stage.addChild(playButt);
-    playButt.x = 80;
-    playButt.y = 390;
-    playButt.addEventListener("click", mainGameStart);
-
-    //add the instructions button
-    instructionButt = new createjs.Bitmap(queue.getResult("instructionButton"));
-    this.stage.addChild(instructionButt);
-    instructionButt.x = 80;
-    instructionButt.y = 310;
-    instructionButt.addEventListener("click", showInstructions);
-
-    var mainTune = createjs.Sound.play("main", { loop: 1000 });
-    mainTune.addEventListener("loop", handleLoop);
-    mainTune.volume = mainTune.volume * 0.2;
-
-    function handleLoop(event) {
-        //loop the music
-    }
-    stage.update();
-}
-
-function showInstructions(e) {
-    stage.removeAllChildren();
-
-    //add the main screen
-    insScreen = new createjs.Bitmap(queue.getResult("instructions"));
-    this.stage.addChild(insScreen);
-    insScreen.x = 0;
-    insScreen.y = 0;
-
-    //add the play button
-    playButt = new createjs.Bitmap(queue.getResult("playButton"));
-    this.stage.addChild(playButt);
-    playButt.x = 80;
-    playButt.y = 390;
-    playButt.addEventListener("click", mainGameStart);
-
-    stage.update();
 }
 
 function mainGameStart(e) {
