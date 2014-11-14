@@ -285,7 +285,6 @@ var Elf = (function () {
         stage.addChild(this.image);
     }
     Elf.prototype.update = function () {
-        this.image.framerate = 2;
         this.image.x = stage.mouseX;
         this.image.y = stage.mouseY;
     };
