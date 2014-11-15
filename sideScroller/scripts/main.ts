@@ -1,4 +1,21 @@
-﻿var stage: createjs.Stage;
+﻿/**
+* Author : Jacqueline Richard
+* Javascript file for index.html
+* This javascript is the main game code. It does everything. :D
+* Last Modified by : Jacqueline Richard
+* Date Last Modified :  Nov 15th, 2014
+* Revision History: 1.0 Initial Commit, Nov 9th, 2014
+*                   1.1 Main Functions
+*                   1.2 Added Game Objects
+*                   1.3 Added Start Screen, Instructions, GameOver Screen
+*                   1.4 Fixed the lag
+*                   2.0 Added animations (then took them out) Nov 13th, 2014
+*                   2.1 Added Shooting
+*                   3.0 Final version Nov 15th, 2014
+*/
+
+
+var stage: createjs.Stage;
 var queue;
 
 // Game Objects
@@ -41,6 +58,7 @@ var atlas: createjs.SpriteSheet;
 
 var progressText = new createjs.Text("", "20px Arial", "#000000");
 
+//preload all the things
 function preload(): void {
     stage = new createjs.Stage(document.getElementById("canvas"));
     progressText.x = 300 - progressText.getMeasuredWidth() / 2;
@@ -83,6 +101,7 @@ function preload(): void {
     this.atlas = new createjs.SpriteSheet(this.spriteSheetData);
 }
 
+//these should be the animations... fuck if they worked
 function handleComplete() {
     var elf = ({
         images: ["images/sprite.png"],
@@ -119,6 +138,7 @@ function handleComplete() {
 
 }
 
+//the function that the html file runs
 function init(): void {
     gameStart();
 }
@@ -254,7 +274,7 @@ function gameOver(): void {
 }
 
 
-
+//the loader precentage thing
 function handleFileProgress(event) {
     progressText.text = (queue.progress * 100 | 0) + " % Loaded";
     stage.update();
@@ -430,6 +450,7 @@ class Arrow {
 
 }
 
+//this class creates the apple item
 class Apple {
     image: createjs.Bitmap;
     width: number;
@@ -479,7 +500,7 @@ class Forest {
     }
 
     reset() {
-        this.image.x = 0;//this needs to be changed
+        this.image.x = 0;
     }
 
     update() {
@@ -506,7 +527,7 @@ class Clouds {
     }
 
     reset() {
-        this.image.x = 0;//this needs to be changed
+        this.image.x = 0;
     }
 
     update() {
@@ -597,7 +618,7 @@ function elfAndApple(hitApple: Apple) {
         scoreboard.score += 30;
         hitApple.reset();
         appleCount++;
-        if (appleCount >= 20) {
+        if (appleCount >= 20) { //collect 20 apples and get another life
             createjs.Sound.play("bell");
             scoreboard.lives += 1;
             appleCount = 0;
@@ -649,6 +670,7 @@ function collisionCheck() {
     }
 }
 
+//the listener event that shoots the arrows - only 5 allowed 
 function shoot(e): void {
     if (arrowCount < 5) {
         arrows[arrowCount].reset();
@@ -661,7 +683,7 @@ function shoot(e): void {
 }
 
 
-
+//starts the main part of the game
 function mainGameStart(e): void {
    //createjs.Ticker.setFPS(60);
     createjs.Ticker.timingMode = createjs.Ticker.RAF;

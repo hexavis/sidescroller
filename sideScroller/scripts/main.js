@@ -1,4 +1,19 @@
-﻿var stage;
+﻿/**
+* Author : Jacqueline Richard
+* Javascript file for index.html
+* This javascript is the main game code. It does everything. :D
+* Last Modified by : Jacqueline Richard
+* Date Last Modified :  Nov 15th, 2014
+* Revision History: 1.0 Initial Commit, Nov 9th, 2014
+*                   1.1 Main Functions
+*                   1.2 Added Game Objects
+*                   1.3 Added Start Screen, Instructions, GameOver Screen
+*                   1.4 Fixed the lag
+*                   2.0 Added animations (then took them out) Nov 13th, 2014
+*                   2.1 Added Shooting
+*                   3.0 Final version Nov 15th, 2014
+*/
+var stage;
 var queue;
 
 // Game Objects
@@ -41,6 +56,7 @@ var atlas;
 
 var progressText = new createjs.Text("", "20px Arial", "#000000");
 
+//preload all the things
 function preload() {
     stage = new createjs.Stage(document.getElementById("canvas"));
     progressText.x = 300 - progressText.getMeasuredWidth() / 2;
@@ -81,6 +97,7 @@ function preload() {
     this.atlas = new createjs.SpriteSheet(this.spriteSheetData);
 }
 
+//these should be the animations... fuck if they worked
 function handleComplete() {
     var elf = ({
         images: ["images/sprite.png"],
@@ -116,6 +133,7 @@ function handleComplete() {
     bunnyData = new createjs.SpriteSheet(bunny);
 }
 
+//the function that the html file runs
 function init() {
     gameStart();
 }
@@ -243,6 +261,7 @@ function gameOver() {
     stage.update();
 }
 
+//the loader precentage thing
 function handleFileProgress(event) {
     progressText.text = (queue.progress * 100 | 0) + " % Loaded";
     stage.update();
@@ -393,6 +412,7 @@ var Arrow = (function () {
     return Arrow;
 })();
 
+//this class creates the apple item
 var Apple = (function () {
     function Apple() {
         this.image = new createjs.Bitmap(queue.getResult("apple"));
@@ -430,7 +450,7 @@ var Forest = (function () {
         this.reset();
     }
     Forest.prototype.reset = function () {
-        this.image.x = 0; //this needs to be changed
+        this.image.x = 0;
     };
 
     Forest.prototype.update = function () {
@@ -453,7 +473,7 @@ var Clouds = (function () {
         this.reset();
     }
     Clouds.prototype.reset = function () {
-        this.image.x = 0; //this needs to be changed
+        this.image.x = 0;
     };
 
     Clouds.prototype.update = function () {
@@ -591,6 +611,7 @@ function collisionCheck() {
     }
 }
 
+//the listener event that shoots the arrows - only 5 allowed
 function shoot(e) {
     if (arrowCount < 5) {
         arrows[arrowCount].reset();
@@ -600,6 +621,7 @@ function shoot(e) {
     }
 }
 
+//starts the main part of the game
 function mainGameStart(e) {
     //createjs.Ticker.setFPS(60);
     createjs.Ticker.timingMode = createjs.Ticker.RAF;
