@@ -9,11 +9,17 @@ var apple;
 var clouds;
 var scoreboard;
 
+// Arrows
+var arrow;
+var nextArrow;
+var timeArrow = 6;
+
 // Cloud Array
 var bushes = [];
 var bunnies = [];
 var apples = [];
 var hearts = [];
+var arrows = [];
 
 // Game Constants
 var BUSH_NUM = 3;
@@ -55,6 +61,7 @@ function preload() {
         //{ id: "bunny", src: "images/bunny.gif" },
         { id: "apple", src: "images/apple.png" },
         { id: "clouds", src: "images/clouds.png" },
+        { id: "arrow", src: "images/arrow.png" },
         { id: "mainScreen", src: "images/mainscreen.png" },
         { id: "playButton", src: "images/playButton.png" },
         { id: "playAgainButton", src: "images/playAgain.png" },
@@ -116,6 +123,8 @@ function init() {
 // Main Game Screen : has a play button and the instruction button
 function gameStart() {
     stage.cursor = 'default';
+
+    nextArrow = 0;
 
     //add the main screen
     mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
@@ -262,6 +271,25 @@ function gameLoop(event) {
         apples[count].update();
     }
 
+    if (nextArrow > 0) {
+        nextArrow--;
+    }
+
+    for (var arrow in arrows) {
+        var stick = arrows[arrow];
+        if (!stick || !stick.active) {
+            continue;
+        }
+
+        if (stick.x <= (stick.width - 700)) {
+            stick.active = false;
+            stage.removeChild(stick);
+            arrows.splice(stick, 1);
+        } else {
+            stick.x += 4;
+        }
+    }
+
     collisionCheck();
     scoreboard.update();
     stage.update();
@@ -350,6 +378,51 @@ var Bush = (function () {
         }
     };
     return Bush;
+})();
+
+//create the arrow
+var Arrow = (function () {
+    function Arrow() {
+        var shot = arrows[this.createArrow()];
+        shot.x = elf.image.x;
+        shot.y = elf.image.y;
+        shot.active = true;
+    }
+    Arrow.prototype.createArrow = function () {
+        var i = 0;
+
+        while (i <= arrows.length) {
+            if (!arrows[i]) {
+                this.image = new createjs.Bitmap(queue.getResult("arrow"));
+                this.width = this.image.getBounds().width;
+                this.height = this.image.getBounds().height;
+                arrows[i] = this.image;
+                break;
+            } else if (!arrows[i].active) {
+                arrows[i].active = true;
+                break;
+            } else {
+                i++;
+            }
+        }
+
+        if (arrows.length == 0) {
+            arrows[0] = new createjs.Bitmap(queue.getResult("arrow"));
+        }
+
+        stage.addChild(arrows[i]);
+        return i;
+    };
+
+    Arrow.prototype.update = function (count) {
+        this.image.x -= 3;
+        if (this.image.x <= (this.width - 700)) {
+            arrows[count].active = false;
+            stage.removeChild(arrows[count]);
+            arrows.splice(arrows[count], 1);
+        }
+    };
+    return Arrow;
 })();
 
 var Apple = (function () {
@@ -503,6 +576,34 @@ function elfAndApple(hitApple) {
     }
 }
 
+//collision between arrow and bunny
+function arrowAndBunny(hitBunny) {
+    var point1 = new createjs.Point();
+    var point2 = new createjs.Point();
+
+    for (var arrow in arrows) {
+        var stick = arrows[arrow];
+        if (!stick || !stick.active) {
+            continue;
+        }
+
+        point1.x = stick.image.x;
+        point1.y = stick.image.y;
+        point2.x = hitBunny.image.x;
+        point2.y = hitBunny.image.y;
+
+        if (distance(point1, point2) < ((stick.width * 0.5) + (hitBunny.width * 0.5))) {
+            createjs.Sound.play("arrowHit");
+            scoreboard.score += 50;
+            hitBunny.reset();
+
+            stage.removeChild(stick);
+            arrows[arrow].active = false;
+            arrows.splice(arrows[arrow], 1);
+        }
+    }
+}
+
 // Collision Check Utility Function
 function collisionCheck() {
     for (var count = 0; count < BUSH_NUM; count++) {
@@ -513,8 +614,19 @@ function collisionCheck() {
         elfAndBunny(bunnies[count]);
     }
 
+    for (var count = 0; count < BUNNY_NUM; count++) {
+        arrowAndBunny(bunnies[count]);
+    }
+
     for (var count = 0; count < APPLE_NUM; count++) {
         elfAndApple(apples[count]);
+    }
+}
+
+function shoot(e) {
+    if (nextArrow <= 0) {
+        nextArrow = timeArrow;
+        arrow = new Arrow();
     }
 }
 
@@ -525,11 +637,9 @@ function mainGameStart(e) {
 
     stage.enableMouseOver(20);
     stage.cursor = 'none';
+    stage.addEventListener("click", shoot);
 
     stage.removeAllChildren();
-
-    var point1 = new createjs.Point();
-    var point2 = new createjs.Point();
 
     forest = new Forest();
 

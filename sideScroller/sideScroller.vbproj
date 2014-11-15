@@ -85,6 +85,7 @@
   <ItemGroup>
     <Content Include="css\normalize.css" />
     <Content Include="images\apple.png" />
+    <Content Include="images\arrow.png" />
     <Content Include="images\background.png" />
     <Content Include="images\bunny.gif" />
     <Content Include="images\bunny1.png" />
