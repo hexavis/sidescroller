@@ -8,11 +8,9 @@ var bunny: Bunny;
 var apple: Apple;
 var clouds: Clouds;
 var scoreboard: Scoreboard; 
-
-// Arrows
 var arrow: Arrow;
-var nextArrow; //don't allow a constant stream of arrows
-var timeArrow = 3;
+var arrowCount = 0;
+var appleCount = 0;
 
 // Cloud Array
 var bushes = [];
@@ -25,6 +23,7 @@ var arrows = [];
 var BUSH_NUM: number = 3;
 var BUNNY_NUM: number = 3;
 var APPLE_NUM: number = 1;
+var ARROW_NUM: number = 5;
 var GAME_FONT: string = "40px Consolas";//change
 var FONT_COLOUR: string = "#FFFF00";//change
 var PLAYER_LIVES: number = 3;
@@ -126,8 +125,6 @@ function init(): void {
 // Main Game Screen : has a play button and the instruction button
 function gameStart(): void {
     stage.cursor = 'default';
-
-    nextArrow = 0;
 
     //add the main screen
     mainScreen = new createjs.Bitmap(queue.getResult("mainScreen"));
@@ -283,24 +280,10 @@ function gameLoop(event): void {
     for (var count = 0; count < APPLE_NUM; count++) {
         apples[count].update();
     }
-
-    if (nextArrow > 0) {
-        nextArrow--;
-    }
-
-    for (var arrow in arrows) {
-        var stick = arrows[arrow];
-        if (!stick || !stick.active) { continue; }
-
-        if (stick.x <= (stick.width - 700)) {
-            stick.active = false;
-            stage.removeChild(stick);
-            arrows.splice(stick, 1);
-        }
-        else {
-            stick.x += 4;
-        }
-    }
+  
+    for (var count = 0; count < arrows.length; count++) {
+        arrows[count].update(count);
+    }  
 
     collisionCheck();
     scoreboard.update();
@@ -409,51 +392,39 @@ class Bush {
 
 //create the arrow
 class Arrow {
+
     image: createjs.Bitmap;
     width: number;
     height: number;
-
-     createArrow() {
-            var i = 0;
-
-            while (i <= arrows.length) {
-                if (!arrows[i]) {
-                    this.image = new createjs.Bitmap(queue.getResult("arrow"));
-                    this.width = this.image.getBounds().width;
-                    this.height = this.image.getBounds().height;
-                    arrows[i] = this.image;
-                    break;
-                } else if (!arrows[i].active) {
-                    arrows[i].active = true;
-                    break;
-                } else {
-                    i++
-                }
-            }
-
-            if (arrows.length == 0) {
-                arrows[0] = new createjs.Bitmap(queue.getResult("arrow"));
-            }
-
-            stage.addChild(arrows[i]);
-            return i;
-        }
-
+    dy: number;
+    dx: number;
     constructor() {
-        var shot = arrows[this.createArrow()];
-        shot.x = elf.image.x;
-        shot.y = elf.image.y;
-        shot.active = true;
-     }
+        this.image = new createjs.Bitmap(queue.getResult("arrow"));
+        this.width = this.image.getBounds().width;
+        this.height = this.image.getBounds().height;
+        this.image.regX = this.width * 0.5;
+        this.image.regY = this.height * 0.5;
+        stage.addChild(this.image);
+        this.image.x = 750;
+        this.image.y = 550;
 
-    update(count: number) {
-        this.image.x -= 3;
-        if (this.image.x <= (this.width - 700)) {
-            arrows[count].active = false;
-            stage.removeChild(arrows[count]);
-            arrows.splice(arrows[count], 1);
-            
+    }
+
+    reset() {
+        this.image.x = elf.image.x;
+        this.image.y = elf.image.y;
+        this.dx = 3;
+    }
+
+    update() {
+        this.image.x += 3;
+        if (this.image.x <= (this.width - 700)) {   
         }
+
+    }
+
+    hide() {
+        this.image.x = 750;     
     }
 
 }
@@ -479,6 +450,8 @@ class Apple {
         this.image.y = Math.floor(Math.random() * stage.canvas.height);
         this.dx = 3;
     }
+
+ 
 
     update() {
         // this.image.y += this.dy;
@@ -622,34 +595,30 @@ function elfAndApple(hitApple: Apple) {
         createjs.Sound.play("appleCrunch");
         scoreboard.score += 30;
         hitApple.reset();
+        appleCount++;
+        if (appleCount >= 20) {
+            scoreboard.lives += 1;
+            appleCount = 0;
+        }
     }
 }
 
 //collision between arrow and bunny
-function arrowAndBunny(hitBunny: Bunny) {
+function arrowAndBunny(hitBunny: Bunny, hitArrow: Arrow) {
     var point1: createjs.Point = new createjs.Point();
     var point2: createjs.Point = new createjs.Point();
 
-    for (var arrow in arrows) {
-        var stick = arrows[arrow];
-        if (!stick || !stick.active) {
-            continue;
-        }
+    point1.x = hitArrow.image.x;
+    point1.y = hitArrow.image.y;
+    point2.x = hitBunny.image.x;
+    point2.y = hitBunny.image.y;
 
-        point1.x = stick.image.x;
-        point1.y = stick.image.y;
-        point2.x = hitBunny.image.x;
-        point2.y = hitBunny.image.y;
-
-        if (distance(point1, point2) < ((stick.width * 0.5) + (hitBunny.width * 0.5))) {
-            createjs.Sound.play("arrowHit");
-            scoreboard.score += 50;
-            hitBunny.reset();
-
-            stage.removeChild(stick);
-            arrows[arrow].active = false;
-            arrows.splice(arrows[arrow], 1);
-        }
+    if (distance(point1, point2) < ((hitArrow.width * 0.5) + (hitBunny.width * 0.5))) {
+        createjs.Sound.play("arrowHit");
+        scoreboard.score += 50;
+        hitBunny.reset();
+        hitArrow.hide();
+    
     }
 }
 
@@ -665,7 +634,12 @@ function collisionCheck() {
     }
 
     for (var count = 0; count < BUNNY_NUM; count++) {
-        arrowAndBunny(bunnies[count]);
+        arrowAndBunny(bunnies[count], arrows[0]);
+        arrowAndBunny(bunnies[count], arrows[1]);
+        arrowAndBunny(bunnies[count], arrows[2]);
+        arrowAndBunny(bunnies[count], arrows[3]);
+        arrowAndBunny(bunnies[count], arrows[4]);
+       
     }
 
     for (var count = 0; count < APPLE_NUM; count++) {
@@ -674,10 +648,14 @@ function collisionCheck() {
 }
 
 function shoot(e): void {
-    if (nextArrow <= 0) {
-        nextArrow = timeArrow;
-       arrow = new Arrow();
-    } 
+    if (arrowCount < 5) {
+        arrows[arrowCount].reset();
+        arrowCount++;
+    }
+    else {
+        arrowCount = 0;
+    }
+
 }
 
 
@@ -688,9 +666,10 @@ function mainGameStart(e): void {
     createjs.Ticker.addEventListener("tick", gameLoop);
     
 
-    stage.enableMouseOver(20);
+    stage.enableMouseOver(60);
+    stage.mouseChildren = true;
     stage.cursor = 'none';
-    stage.addEventListener("click", shoot);
+    stage.addEventListener("stagemousedown", shoot);
 
     stage.removeAllChildren();
 
@@ -708,9 +687,13 @@ function mainGameStart(e): void {
         apples[count] = new Apple();
     }
 
+    for (var count = 0; count < ARROW_NUM; count++) {
+        arrows[count] = new Arrow();
+    }
+
 
     elf = new Elf();
-    elf.run();
+    //elf.run();
 
     clouds = new Clouds();
 
