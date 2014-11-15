@@ -76,27 +76,32 @@ function preload() {
 
 function handleComplete() {
     var elf = ({
-        "images": ["images/sprite.png"],
-        "frames": [
+        images: ["images/sprite.png"],
+        frames: [
             [2, 2, 82, 103],
             [86, 2, 82, 103],
             [170, 2, 82, 103]
         ],
-        "animations": {
-            "run": [3, 2, 1, 3],
-            frequency: 300
+        animations: {
+            run: {
+                frames: [3, 2, 1, 3],
+                speed: 2
+            }
         }
     });
 
     var bunny = ({
-        "images": ["images/sprite.png"],
-        "frames": [
+        images: ["images/sprite.png"],
+        frames: [
             [254, 2, 83, 74],
             [339, 2, 83, 74],
             [424, 2, 83, 74]
         ],
-        "animations": {
-            "run": [0, 2, 1]
+        animations: {
+            run: {
+                frames: [0, 2, 1],
+                speed: 2
+            }
         }
     });
 
@@ -238,19 +243,12 @@ function handleFileProgress(event) {
 
 // Game Loop
 function gameLoop(event) {
+    console.log('tick');
+    stage.update(event);
+
     forest.update();
     clouds.update();
     elf.update();
-
-    while (bushes.length > 3) {
-        bushes.pop();
-    }
-    while (bunnies.length > 3) {
-        bunnies.pop();
-    }
-    while (apples.length > 3) {
-        apples.pop();
-    }
 
     for (var count = 0; count < BUSH_NUM; count++) {
         bushes[count].update();
@@ -265,9 +263,7 @@ function gameLoop(event) {
     }
 
     collisionCheck();
-
     scoreboard.update();
-
     stage.update();
 }
 
@@ -275,7 +271,7 @@ function gameLoop(event) {
 var Elf = (function () {
     function Elf() {
         this.image = new createjs.BitmapAnimation(elfData, "elf");
-        this.image.gotoAndPlay("run");
+        this.image.framerate = 3;
         this.width = this.image.getBounds().width;
         this.height = this.image.getBounds().height;
         this.image.regX = this.width * 0.5;
@@ -284,6 +280,10 @@ var Elf = (function () {
 
         stage.addChild(this.image);
     }
+    Elf.prototype.run = function () {
+        this.image.gotoAndPlay("run");
+    };
+
     Elf.prototype.update = function () {
         this.image.x = stage.mouseX;
         this.image.y = stage.mouseY;
@@ -294,9 +294,8 @@ var Elf = (function () {
 // bunny Class this allows for one bunny at a time.
 var Bunny = (function () {
     function Bunny() {
-        this.image = new createjs.Sprite(bunnyData);
-        this.image.gotoAndPlay("run");
-        this.image.framerate = 1;
+        this.image = new createjs.BitmapAnimation(bunnyData, "bunny");
+        this.image.framerate = 3;
         this.width = this.image.getBounds().width;
         this.height = this.image.getBounds().height;
         this.image.regX = this.width * 0.5;
@@ -304,7 +303,12 @@ var Bunny = (function () {
         stage.addChild(this.image);
         this.reset();
     }
+    Bunny.prototype.run = function () {
+        this.image.gotoAndPlay("run");
+    };
+
     Bunny.prototype.reset = function () {
+        this.image.framerate = 3;
         this.image.x = 750;
         this.image.y = Math.floor(Math.random() * stage.canvas.height);
         this.dy = Math.floor(Math.random() * 4 - 2);
@@ -314,7 +318,7 @@ var Bunny = (function () {
     Bunny.prototype.update = function () {
         this.image.y += this.dy;
         this.image.x -= this.dx;
-        if (this.image.x <= (this.width - stage.canvas.width)) {
+        if (this.image.x <= (this.width - 700)) {
             this.reset();
         }
     };
@@ -341,7 +345,7 @@ var Bush = (function () {
     Bush.prototype.update = function () {
         // this.image.y += this.dy;
         this.image.x -= this.dx;
-        if (this.image.x <= (this.width - stage.canvas.width)) {
+        if (this.image.x <= (this.width - 700)) {
             this.reset();
         }
     };
@@ -367,7 +371,7 @@ var Apple = (function () {
     Apple.prototype.update = function () {
         // this.image.y += this.dy;
         this.image.x -= this.dx;
-        if (this.image.x <= (this.width - stage.canvas.width)) {
+        if (this.image.x <= (this.width - 700)) {
             this.reset();
         }
     };
@@ -515,7 +519,8 @@ function collisionCheck() {
 }
 
 function mainGameStart(e) {
-    createjs.Ticker.setFPS(60);
+    //createjs.Ticker.setFPS(60);
+    createjs.Ticker.timingMode = createjs.Ticker.RAF;
     createjs.Ticker.addEventListener("tick", gameLoop);
 
     stage.enableMouseOver(20);
@@ -533,6 +538,7 @@ function mainGameStart(e) {
     }
     for (var count = 0; count < BUNNY_NUM; count++) {
         bunnies[count] = new Bunny();
+        bunnies[count].run();
     }
 
     for (var count = 0; count < APPLE_NUM; count++) {
@@ -540,6 +546,8 @@ function mainGameStart(e) {
     }
 
     elf = new Elf();
+    elf.run();
+
     clouds = new Clouds();
 
     scoreboard = new Scoreboard();
