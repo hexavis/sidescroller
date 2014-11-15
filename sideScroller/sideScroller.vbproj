@@ -126,10 +126,11 @@
     <Content Include="scripts\main.js.map" />
     <None Include="scripts\_references.js" />
     <Content Include="scripts\main.js" />
-    <Content Include="sounds\apple.wav" />
-    <Content Include="sounds\leafHit.wav" />
-    <Content Include="sounds\thud.wav" />
-    <Content Include="sounds\leather.wav" />
+    <Content Include="sounds\apple.mp3" />
+    <Content Include="sounds\bell.mp3" />
+    <Content Include="sounds\leafHit.mp3" />
+    <Content Include="sounds\leather.mp3" />
+    <Content Include="sounds\thud.mp3" />
     <Content Include="sounds\piano.mp3" />
     <Content Include="Web.config" />
   </ItemGroup>

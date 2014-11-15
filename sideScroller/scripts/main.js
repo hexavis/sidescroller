@@ -24,8 +24,8 @@ var BUSH_NUM = 3;
 var BUNNY_NUM = 3;
 var APPLE_NUM = 1;
 var ARROW_NUM = 5;
-var GAME_FONT = "40px Consolas";
-var FONT_COLOUR = "#FFFF00";
+var GAME_FONT = "40px Pacifico";
+var FONT_COLOUR = "#660033";
 var PLAYER_LIVES = 3;
 
 var mainScreen;
@@ -71,10 +71,11 @@ function preload() {
         { id: "heart", src: "images/heart.png" },
         //sounds
         { id: "main", src: "sounds/piano.mp3" },
-        { id: "appleCrunch", src: "sounds/apple.wav" },
-        { id: "leafHit", src: "sounds/leafHit.wav" },
-        { id: "arrowHit", src: "sounds/leather.wav" },
-        { id: "thud", src: "sounds/thud.wav" }
+        { id: "bell", src: "sounds/bell.mp3" },
+        { id: "appleCrunch", src: "sounds/apple.mp3" },
+        { id: "leafHit", src: "sounds/leafHit.mp3" },
+        { id: "arrowHit", src: "sounds/leather.mp3" },
+        { id: "thud", src: "sounds/thud.mp3" }
     ]);
     queue.addEventListener("complete", handleComplete);
     this.atlas = new createjs.SpriteSheet(this.spriteSheetData);
@@ -542,6 +543,7 @@ function elfAndApple(hitApple) {
         hitApple.reset();
         appleCount++;
         if (appleCount >= 20) {
+            createjs.Sound.play("bell");
             scoreboard.lives += 1;
             appleCount = 0;
         }
@@ -609,6 +611,7 @@ function mainGameStart(e) {
     stage.addEventListener("stagemousedown", shoot);
 
     stage.removeAllChildren();
+    appleCount = 0;
 
     forest = new Forest();
 
