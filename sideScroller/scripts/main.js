@@ -12,7 +12,7 @@ var scoreboard;
 // Arrows
 var arrow;
 var nextArrow;
-var timeArrow = 6;
+var timeArrow = 3;
 
 // Cloud Array
 var bushes = [];
